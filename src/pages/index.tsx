@@ -1,13 +1,31 @@
-import styles from './index.less';
+import { Link,BrowserRouter } from 'react-router-dom';
+import {
+  RouteSwitchProvider,
+  RouteSwitch,
+  SchemaComponentProvider,
+  compose,
+} from '@nocobase/client';
+import { Hello } from './Hello';
+import { About } from './About';
+import { RouteSchemaComponent } from './RouteSchemaComponent';
+import routes from './routes';
 
-import { compose } from '@nocobase/client';
+import { MyDemoProvider } from './MyDemoProvider';
 
-export default function IndexPage() {
-  console.log(`${compose}`)
+const providers = [
+  [BrowserRouter, { initialEntries: ['/'] }],
+  [SchemaComponentProvider, { components: { Hello, About } }],
+  [RouteSwitchProvider, { components: { RouteSchemaComponent } }],
+  [MyDemoProvider, { demoName: 'My Demo Name' }],
+];
 
+const App = compose(...providers)(() => {
   return (
     <div>
-      <h1 className={styles.title}>Page index123</h1>
+      <Link to={'/'}>Home</Link>,<Link to={'/about'}>About</Link>
+      <RouteSwitch routes={routes} />
     </div>
   );
-}
+});
+
+export default App;
