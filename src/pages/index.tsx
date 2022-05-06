@@ -1,13 +1,49 @@
 import { MemoryRouter as Router, Link, Switch, Route } from 'react-router-dom';
 
-const Home = () => <h1>Home</h1>;
+import { ISchema, createSchemaField } from '@formily/react';
+import { createForm } from '@formily/core';
+import { Form, FormItem } from '@formily/antd';
+
+const Home = ({ name = '' }) => <h1>Home {name}</h1>;
 const About = () => <h1>About</h1>;
+
+const schema: ISchema = {
+  name: 'home',
+  'x-component': 'Home',
+  'x-component-props': {
+    name: '首页',
+  },
+};
+
+const SchemaField = createSchemaField({
+  components: {
+    Home,
+    About,
+    FormItem,
+  },
+});
+
+const form = createForm({
+  effects: () => {},
+});
 
 const routes: object[] = [
   {
     path: '/',
     exact: true,
-    component: Home,
+    component: () => {
+      return (
+        <Form form={form}>
+          <SchemaField>
+              <SchemaField.String
+                name="Home"
+                x-component="Home"
+                x-decorator="FormItem"
+              />
+          </SchemaField>
+        </Form>
+      );
+    },
   },
   {
     path: '/about',
