@@ -1,83 +1,148 @@
-import { MemoryRouter as Router, Link, Switch, Route } from 'react-router-dom';
-
-import { createSchemaField, FormProvider } from '@formily/react';
+import React from 'react';
 import { createForm } from '@formily/core';
-import { FormItem } from '@formily/antd';
+import { createSchemaField} from '@formily/react';
+import { Form, FormItem, Input, Password, Submit } from '@formily/antd';
+import { Tabs, Card } from 'antd';
+import * as ICONS from '@ant-design/icons';
+import { VerifyCode } from './VerifyCode';
 
-const Home = ({ name = '' }) => <div><h1>Home {name}</h1><p>为不想打占位符的你随机生成测试文字，支持中文字符拉丁字符切换，支持自定义字库，在界面上根据需要选择区域并点击，生成的内容被复制到剪切板，在所需位置粘贴即可。</p></div>;
-const About = () => <h1>About</h1>;
+const normalForm = createForm({
+  validateFirst: true,
+});
+
+const phoneForm = createForm({
+  validateFirst: true,
+});
 
 const SchemaField = createSchemaField({
   components: {
-    Home,
-    About,
     FormItem,
+    Input,
+    Password,
+    VerifyCode,
+  },
+  scope: {
+    // @ts-ignore
+    icon(name) {
+      // @ts-ignore
+      return React.createElement(ICONS[name]);
+    },
   },
 });
 
-const routes: object[] = [
-  {
-    path: '/',
-    exact: true,
-    component: 'Home',
+const normalSchema = {
+  type: 'object',
+  properties: {
+    username: {
+      type: 'string',
+      title: '用户名',
+      required: true,
+      'x-decorator': 'FormItem',
+      'x-component': 'Input',
+      'x-component-props': {
+        prefix: "{{icon('UserOutlined')}}",
+      },
+    },
+    password: {
+      type: 'string',
+      title: '密码',
+      required: true,
+      'x-decorator': 'FormItem',
+      'x-component': 'Password',
+      'x-component-props': {
+        prefix: "{{icon('LockOutlined')}}",
+      },
+    },
   },
-  {
-    path: '/about',
-    component: 'About',
-  },
-];
-
-function RouteSwitch(props: any) {
-  const { routes = [] } = props;
-  if (!routes.length) {
-    return null;
-  }
-
-  return (
-    <Switch>
-      {routes.map((route: any, index: number) => {
-        return (
-          <Route
-            key={index}
-            path={route.path}
-            exact={route.exact}
-            render={() => {
-              return (
-                <FormProvider
-                  form={createForm({
-                    effects: () => {},
-                  })}
-                >
-                  <SchemaField
-                    schema={{
-                      type: 'object',
-                      properties: {
-                        page: {
-                          type: 'string',
-                          // 'x-decorator': 'FormItem',
-                          'x-component': route.component,
-                        },
-                      },
-                    }}
-                  />
-                </FormProvider>
-              );
-            }}
-          />
-        );
-      })}
-    </Switch>
-  );
-}
-
-const App = () => {
-  return (
-    <Router>
-      <Link to="/">首页</Link>
-      <Link to="/about">关于</Link>
-      <RouteSwitch routes={routes} />
-    </Router>
-  );
 };
 
-export default App;
+const phoneSchema = {
+  type: 'object',
+  properties: {
+    phone: {
+      type: 'string',
+      title: '手机号',
+      required: true,
+      'x-validator': 'phone',
+      'x-decorator': 'FormItem',
+      'x-component': 'Input',
+      'x-component-props': {
+        prefix: "{{icon('PhoneOutlined')}}",
+      },
+    },
+    verifyCode: {
+      type: 'string',
+      title: '验证码',
+      required: true,
+      'x-decorator': 'FormItem',
+      'x-component': 'VerifyCode',
+      'x-component-props': {
+        prefix: "{{icon('LockOutlined')}}",
+      },
+      'x-reactions': [
+        {
+          dependencies: ['.phone#value', '.phone#valid'],
+          fulfill: {
+            state: {
+              'component[1].readyPost': '{{$deps[0] && $deps[1]}}',
+              'component[1].phoneNumber': '{{$deps[0]}}',
+            },
+          },
+        },
+      ],
+    },
+  },
+};
+
+export default () => {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        background: '#eee',
+        padding: '40px 0',
+      }}
+    >
+      <Card style={{ width: 400 }}>
+        <Tabs style={{ overflow: 'visible', marginTop: -10 }}>
+          <Tabs.TabPane key="1" tab="账密登录">
+            <Form
+              form={normalForm}
+              layout="vertical"
+              size="large"
+              onAutoSubmit={console.log}
+            >
+              <SchemaField schema={normalSchema} />
+              <Submit block size="large">
+                登录
+              </Submit>
+            </Form>
+          </Tabs.TabPane>
+          <Tabs.TabPane key="2" tab="手机登录">
+            <Form
+              form={phoneForm}
+              layout="vertical"
+              size="large"
+              onAutoSubmit={console.log}
+            >
+              <SchemaField schema={phoneSchema} />
+              <Submit block size="large">
+                登录
+              </Submit>
+            </Form>
+          </Tabs.TabPane>
+        </Tabs>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+          }}
+        >
+          <a href="#新用户注册">新用户注册</a>
+          <a href="#忘记密码">忘记密码?</a>
+        </div>
+      </Card>
+    </div>
+  );
+};
